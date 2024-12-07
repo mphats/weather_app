@@ -3,49 +3,45 @@ import requests
 import datetime  
 
 def home(request):  
-    # Get the city from POST or set a default value  
-    city = request.POST.get('city', 'blantyre')  
+    # Default city  
+    default_city = 'blantyre'  
+    city = request.POST.get('city', default_city)  # Get the city from POST or default to 'blantyre'  
 
     # API Key and URL  
-    api_key = 'd82c1f811b5e46c2e6dae343ee21a3b3'  
+    api_key = 'd82c1f811b5e46c2e6dae343ee21a3b3'  # Replace with your actual API key  
     url = 'https://api.openweathermap.org/data/2.5/weather'  
     
-    # Parameters for the API request  
+    # Parameters for API request  
     params = {'q': city, 'appid': api_key, 'units': 'metric'}  
+
+    # Initialize variables for weather data  
+    description = ""  
+    icon = None  
+    temp = None  
 
     try:  
         # Make the API request  
         response = requests.get(url, params=params)  
-        response.raise_for_status()  # Raise an error for bad responses (4xx or 5xx)  
+        response.raise_for_status()  # Check for HTTP errors  
         data = response.json()  
 
-        # Check if the API returned a valid response  
+        # Validate and extract weather data  
         if 'weather' in data and 'main' in data:  
-            # Extract weather data  
             description = data['weather'][0]['description']  
             icon = data['weather'][0]['icon']  
             temp = data['main']['temp']  
         else:  
-            # Handle case where the city is not found or other errors  
-            description = "Weather data not found."  
-            icon = None  
-            temp = None  
+            description = "Weather data not found. Please check the city name."  
 
     except requests.exceptions.HTTPError as http_err:  
         description = f"HTTP error occurred: {http_err}"  
-        icon = None  
-        temp = None  
     except requests.exceptions.RequestException as req_err:  
         description = f"Request error occurred: {req_err}"  
-        icon = None  
-        temp = None  
     except Exception as e:  
-        description = f"An error occurred: {e}"  
-        icon = None  
-        temp = None  
+        description = f"An unexpected error occurred: {e}"  
 
     # Current date  
-    day = datetime.date.today()  
+    day = datetime.date.today().strftime("%A, %B %d, %Y")  # Format the date for better readability  
 
     # Render the template with weather data  
     return render(request, 'weatherapp/index.html', {  
